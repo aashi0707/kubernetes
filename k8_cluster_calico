@@ -1,0 +1,30 @@
+               Things to be done in ALL nodes
+
+1.    setenforce 0
+2.    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+3.    systemctl enable --now firewalld
+4.    firewall-cmd --add-port=0-65535/tcp --permanent
+5.    firewall-cmd --add-port=0-65535/udp --permanent
+6.    firewall-cmd --reload
+7.    swapoff -a
+8.    remove entry for swap from /etc/fstab
+9.    modprobe br_netfilter
+10.   echo net.bridge.bridge-nf-call-ip6tables = 1 >>/etc/sysctl.conf
+11.   echo net.bridge.bridge-nf-call-iptables = 1 >>/etc/sysctl.conf
+12.   sysctl --system
+13.   yum install net-tools vim bash-completion kubelet kubectl kubeadm docker -y
+14.   systemctl start docker
+15.   systemctl enable docker kubelet
+
+              Things to be done on Master Node only
+
+1.    kubeadm init --pod-network-cidr=172.24.0.0/16
+2.    kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
+3.    kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/      calico.yaml
+4.    use given command after just above step on ALL worker Nodes
+5.    mkdir /root/.kube
+6.    cp -vi /etc/kubernetes/admin.conf /root/.kube/config
+
+             only on worker node
+
+copy and paste the output of kubectl init command from above step 
