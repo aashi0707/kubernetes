@@ -1,0 +1,150 @@
+---
+ - hosts: nodes
+   tasks: 
+   
+   - name:  enable selinux
+     selinux:
+       policy: targeted
+       state: permissive
+
+
+   - name:  Disable SELinux
+     selinux:
+       state: disabled
+
+   - name: start and enable firewalld
+     service: 
+        name: firewalld
+        state: started
+        enabled: yes
+
+   - name: add port to firewall & reload service
+     firewalld:
+        port: 0-65535/tcp
+        port: 0-65535/udp
+        permanent: yes     
+        state: enabled
+
+   - name: Disable swap
+     command: swapoff -a
+
+   - name: Remove swapfile from /etc/fstab
+     mount:
+        name: swap
+        fstype: swap
+        state: absent
+
+   - name: 2Flannel | Enable br_netfilter module
+     modprobe:
+        name: br_netfilter
+        state: present
+   # when: modinfo_br_netfilter.rc == 0
+  
+       
+   - name: copy the content
+     copy: content="net.bridge.bridge-nf-call-ip6tables = 1" dest=/etc/sysctl.conf
+   - copy: content="net.bridge.bridge-nf-call-iptables = 1" dest=/etc/sysctl.conf
+
+
+    
+   - shell: sysctl -p
+     
+   - name: Add multiple repositories into the same file (1/2)
+     yum_repository:
+      name: a
+      description: EPEL YUM repo
+      file: a.repo
+      baseurl: ftp://192.168.10.254/pub/rhel75
+      gpgcheck: no
+
+
+   - name: Add multiple repositories into the same file (1/2)
+     yum_repository:
+      name: b
+      description: EPEL YUM repo
+      file: b.repo
+      baseurl: ftp://192.168.10.254/pub/adhoc/kubernetes
+      gpgcheck: no
+
+
+
+   - name: install some packages
+     yum: 
+        name: "{{ item }}" 
+        state: "present"
+     with_items:
+               - "vim"
+               - "net-tools"
+               - "bash-completion"
+               - "kubelet"
+               - "kubectl"
+               - "kubeadm"
+               - "docker"
+
+   - name: start and enable docker service
+     service: 
+        name: docker 
+        state: started
+        enabled: yes
+
+   - name: enable kubelet service
+     service:
+        name: kubelet
+        enabled: yes
+        
+
+
+
+   - name: kubeadm command
+     shell:  kubeadm init --pod-network-cidr=172.24.0.0/16
+
+
+   - name: make a directory
+     file: path=/root/.kube   state=directory
+
+   - name: copy admin.conf in above directory
+     copy: remote_src=/etc/kubernetes/admin.conf dest=/root/.kube/config
+
+
+  # - name: execute command
+   #  shell: kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
+
+ #  - name: execute calico.yaml
+  #   shell: kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
